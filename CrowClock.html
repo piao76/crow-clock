@@ -1,0 +1,267 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>五鳥占卜指針時鐘 - 標準時間版</title>
+    <style>
+        body {
+            background-color: #1a1a1a;
+            color: #ffffff;
+            font-family: 'Segoe UI', -apple-system, sans-serif;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+        }
+        
+        /* 時鐘外殼與神鳥外圈 */
+        .clock {
+            width: 320px;
+            height: 320px;
+            border-radius: 50%;
+            background-color: #262626;
+            border: 10px solid #3a3a3a;
+            position: relative;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        
+        /* 動態狀態外圈 */
+        .color-ring {
+            position: absolute;
+            width: 300px;
+            height: 300px;
+            border-radius: 50%;
+            background-color: #333;
+            opacity: 0.25;
+            z-index: 1;
+            transition: background-color 0.5s ease;
+        }
+        
+        /* 內部黑色盤面 */
+        .inner-face {
+            position: absolute;
+            width: 260px;
+            height: 260px;
+            background-color: #262626;
+            border-radius: 50%;
+            z-index: 2;
+        }
+
+        /* 12個數字的動態定位 */
+        .number {
+            position: absolute;
+            width: 30px;
+            height: 30px;
+            text-align: center;
+            line-height: 30px;
+            font-size: 16px;
+            font-weight: bold;
+            color: #aaa;
+            z-index: 3;
+            transform: translate(-50%, -50%);
+        }
+
+        /* 中心點 */
+        .center-nut {
+            width: 12px;
+            height: 12px;
+            background-color: #fff;
+            border-radius: 50%;
+            position: absolute;
+            z-index: 10;
+        }
+
+        /* 指針基礎樣式 */
+        .hand {
+            position: absolute;
+            bottom: 50%;
+            transform-origin: bottom;
+            border-radius: 5px;
+            z-index: 5;
+        }
+        
+        /* 時針（改回白色） */
+        .hour-hand {
+            width: 6px;
+            height: 55px;
+            background-color: #ffffff;
+        }
+        
+        .min-hand {
+            width: 4px;
+            height: 95px;
+            background-color: #cccccc;
+        }
+        
+        .sec-hand {
+            width: 2px;
+            height: 115px;
+            background-color: #e74c3c;
+            border-radius: 0;
+        }
+
+        /* 下方資訊面板 */
+        .info-panel {
+            margin-top: 30px;
+            background-color: #262626;
+            padding: 20px;
+            border-radius: 15px;
+            text-align: center;
+            width: 320px;
+            border: 1px solid #3a3a3a;
+        }
+        
+        .status-badge {
+            display: inline-block;
+            padding: 8px 16px;
+            border-radius: 50px;
+            font-size: 20px;
+            font-weight: bold;
+            margin: 10px 0;
+            background-color: #333;
+        }
+        
+        .advice {
+            font-size: 14px;
+            color: #aaa;
+            line-height: 1.5;
+            background: #1e1e1e;
+            padding: 10px;
+            border-radius: 8px;
+        }
+        
+        /* 狀態顏色庫 */
+        .status-統治 { background-color: #d4af37; color: #000; }
+        .status-進食 { background-color: #2ecc71; color: #fff; }
+        .status-行走 { background-color: #3498db; color: #fff; }
+        .status-睡眠 { background-color: #8e44ad; color: #fff; }
+        .status-死亡 { background-color: #e74c3c; color: #fff; }
+        .status-夜晚 { background-color: #2c3e50; color: #fff; }
+    </style>
+</head>
+<body>
+
+    <!-- 指針時鐘本體 -->
+    <div class="clock" id="clock">
+        <div class="color-ring" id="color-ring"></div>
+        <div class="inner-face"></div>
+        <div class="hand hour-hand" id="hour-hand"></div>
+        <div class="hand min-hand" id="min-hand"></div>
+        <div class="hand sec-hand" id="sec-hand"></div>
+        <div class="center-nut"></div>
+    </div>
+
+    <!-- 下方數據顯示 -->
+    <div class="info-panel">
+        <div style="color:#888; font-size:12px; letter-spacing:1px;">🐦 PANCHAPAKSHI (明半月 - 烏鴉)</div>
+        <div class="status-badge status-夜晚" id="status-display">載入中...</div>
+        <div class="advice" id="advice-display">載入中...</div>
+    </div>
+
+    <script>
+        const clockElement = document.getElementById('clock');
+        const radius = 115; 
+        for (let i = 1; i <= 12; i++) {
+            const numDiv = document.createElement('div');
+            numDiv.className = 'number';
+            numDiv.innerText = i;
+            
+            const angle = (i * 30 - 90) * (Math.PI / 180);
+            const x = 160 + radius * Math.cos(angle);
+            const y = 160 + radius * Math.sin(angle);
+            
+            numDiv.style.left = `${x}px`;
+            numDiv.style.top = `${y}px`;
+            clockElement.appendChild(numDiv);
+        }
+
+        const routines = {
+            0: ["進食", "行走", "統治", "睡眠", "死亡"], 
+            1: ["進食", "行走", "統治", "睡眠", "死亡"], 
+            2: ["行走", "統治", "睡眠", "死亡", "進食"], 
+            3: ["統治", "睡眠", "死亡", "進食", "行走"], 
+            4: ["睡眠", "死亡", "進食", "行走", "統治"], 
+            5: ["死亡", "進食", "行走", "統治", "睡眠"], 
+            6: ["死亡", "進食", "行走", "統治", "睡眠"]  
+        };
+
+        const adviceMap = {
+            "統治": "🌟 大吉！能量處於顛峰，最適合決策與出擊！",
+            "進食": "💪 次吉！體能與思維回補，適合進食與學習。",
+            "行走": "🚶 普通！能量平穩，適合處理日常通勤與庶務。",
+            "睡眠": "💤 沉靜！能量低沉，不宜重大決定，適合休息。",
+            "死亡": "⚠️ 凶！能量最低點，請放鬆心情，避免衝突。",
+            "夜晚": "🌙 夜晚時段！請沉靜休息、恢復元氣。"
+        };
+        
+        const colorMap = {
+            "統治": "#d4af37", "進食": "#2ecc71", "行走": "#3498db", "睡眠": "#8e44ad", "死亡": "#e74c3c", "夜晚": "#2c3e50"
+        };
+
+        const sunriseHour = 5, sunriseMin = 25;
+        const sunsetHour = 18, sunsetMin = 25;
+
+        function updateClock() {
+            const now = new Date();
+            
+            const hours = now.getHours();
+            const minutes = now.getMinutes();
+            const seconds = now.getSeconds();
+
+            // 💡 修正：時針完全改回標準 12 小時制電腦時間
+            const hourDeg = (hours % 12) * 30 + minutes * 0.5;
+            const minDeg = minutes * 6 + seconds * 0.1; 
+            const secDeg = seconds * 6; 
+
+            document.getElementById('hour-hand').style.transform = `rotate(${hourDeg}deg)`;
+            document.getElementById('min-hand').style.transform = `rotate(${minDeg}deg)`;
+            document.getElementById('sec-hand').style.transform = `rotate(${secDeg}deg)`;
+
+            const sunrise = new Date(now);
+            sunrise.setHours(sunriseHour, sunriseMin, 0, 0);
+            
+            const sunset = new Date(now);
+            sunset.setHours(sunsetHour, sunsetMin, 0, 0);
+
+            const statusDisplay = document.getElementById("status-display");
+            const adviceDisplay = document.getElementById("advice-display");
+            const colorRing = document.getElementById("color-ring");
+
+            if (now >= sunrise && now < sunset) {
+                const dayLength = (sunset - sunrise) / 1000;
+                const elapsedSeconds = (now - sunrise) / 1000;
+                
+                let yamaIndex = Math.floor(elapsedSeconds / (dayLength / 5));
+                yamaIndex = Math.min(Math.max(0, yamaIndex), 4);
+
+                const weekday = now.getDay();
+                const currentStatus = routines[weekday][yamaIndex];
+
+                statusDisplay.className = `status-badge status-${currentStatus}`;
+                statusDisplay.innerText = `烏鴉正在【${currentStatus}】`;
+                adviceDisplay.innerText = adviceMap[currentStatus];
+                
+                // 💡 外圈顏色隨當下狀態同步改變
+                colorRing.style.backgroundColor = colorMap[currentStatus];
+                colorRing.style.opacity = "0.25";
+            } else {
+                statusDisplay.className = "status-badge status-夜晚";
+                statusDisplay.innerText = "烏鴉正在【夜晚休息】";
+                adviceDisplay.innerText = adviceMap["夜晚"];
+                
+                colorRing.style.backgroundColor = colorMap["夜晚"];
+                colorRing.style.opacity = "0.2";
+            }
+        }
+
+        setInterval(updateClock, 1000);
+        updateClock();
+    </script>
+</body>
+</html>
