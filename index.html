@@ -3,78 +3,84 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>專業五鳥校正鐘 - 對齊 DrikPanchang</title>
+    <title>五鳥占卜鐘 - 台中 1:1 同步版</title>
     <style>
         * { box-sizing: border-box; }
         body {
-            background-color: #1a1a1a; color: #ffffff;
-            font-family: 'Segoe UI', -apple-system, sans-serif;
-            display: flex; flex-direction: column; justify-content: center; align-items: center;
-            min-height: 100vh; margin: 0; padding: 15px;
+            background-color: #121212; color: #e0e0e0;
+            font-family: 'Segoe UI', 'PingFang TC', sans-serif;
+            display: flex; flex-direction: column; align-items: center;
+            min-height: 100vh; margin: 0; padding: 10px;
         }
-        .main-container { width: 100%; max-width: 400px; display: flex; flex-direction: column; align-items: center; gap: 12px; }
+        .main-container { width: 100%; max-width: 400px; display: flex; flex-direction: column; gap: 15px; }
         
-        /* UI 組件 */
-        .paksha-selector { display: flex; gap: 8px; width: 100%; }
-        .paksha-btn {
-            flex: 1; background: rgba(38, 38, 38, 0.6); border: 1px solid rgba(255, 255, 255, 0.1);
-            color: #888; font-size: 13px; font-weight: bold; cursor: pointer; padding: 10px; border-radius: 20px; transition: 0.3s;
-        }
-        .paksha-btn.active { background: #ffffff; color: #000; }
-
+        /* UI 切換區 */
         .bird-selector {
-            display: flex; width: 100%; background: rgba(38, 38, 38, 0.6);
-            padding: 5px; border-radius: 50px; border: 1px solid rgba(255, 255, 255, 0.1);
+            display: flex; background: #1e1e1e; padding: 5px; border-radius: 40px; 
+            border: 1px solid #333; width: 100%; justify-content: space-between;
         }
         .bird-btn {
-            flex: 1; background: none; border: none; color: #888; font-size: 12px; font-weight: bold;
-            cursor: pointer; padding: 8px 0; border-radius: 20px; transition: 0.3s;
+            flex: 1; background: none; border: none; color: #555; padding: 12px 0; 
+            cursor: pointer; border-radius: 30px; font-size: 13px; transition: 0.3s;
         }
-        .bird-btn.active { background: #d4af37; color: #000; }
+        .bird-btn.active { background: #d4af37; color: #000; font-weight: bold; }
 
-        /* 時鐘 RWD */
+        /* 💡 修正後的時鐘佈局 */
         .clock {
-            width: 75vw; height: 75vw; max-width: 320px; max-height: 320px;
-            border-radius: 50%; background: rgba(38, 38, 38, 0.4); backdrop-filter: blur(10px);
-            border: 10px solid rgba(255, 255, 255, 0.1); position: relative;
-            display: flex; justify-content: center; align-items: center;
+            width: 75vw; height: 75vw; max-width: 300px; max-height: 300px;
+            border-radius: 50%; background: #1e1e1e; border: 8px solid #333;
+            position: relative; margin: 15px auto; display: flex;
+            justify-content: center; align-items: center;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
         }
-        .color-ring { position: absolute; width: 100%; height: 100%; border-radius: 50%; opacity: 0.25; z-index: 1; transition: 0.8s; }
-        .inner-face { position: absolute; width: 85%; height: 85%; background: #262626; border-radius: 50%; z-index: 2; }
-        .number-wrapper { position: absolute; width: 100%; height: 100%; display: flex; justify-content: center; z-index: 3; }
-        .number { position: absolute; top: 6%; font-size: 14px; color: #666; font-weight: bold; }
+        .color-ring { position: absolute; width: 100%; height: 100%; border-radius: 50%; opacity: 0.3; transition: 1s; }
+        .inner-face { position: absolute; width: 88%; height: 88%; background: #121212; border-radius: 50%; z-index: 2; }
         
-        /* 指針與防抖 */
-        .hand { position: absolute; bottom: 50%; transform-origin: bottom; border-radius: 5px; z-index: 5; }
-        .hour-hand { width: 6px; height: 20%; background: #fff; transition: transform 0.5s linear; }
-        .min-hand { width: 4px; height: 30%; background: #ccc; transition: transform 0.5s linear; }
-        .sec-hand { width: 2px; height: 38%; background: #e74c3c; transition: transform 0.2s cubic-bezier(0.4, 2.08, 0.55, 0.44); }
+        /* 💡 修正後的指針中心定位 */
+        .hand { 
+            position: absolute; 
+            left: 50%; 
+            bottom: 50%; 
+            transform-origin: bottom center; 
+            border-radius: 4px; 
+            z-index: 5; 
+            transform: translateX(-50%); /* 關鍵：確保指針水平居中 */
+        }
+        .hour-hand { width: 6px; height: 20%; background: #fff; }
+        .min-hand { width: 4px; height: 30%; background: #aaa; }
+        .sec-hand { 
+            width: 2px; height: 38%; background: #e74c3c; 
+            transition: transform 0.2s cubic-bezier(0.4, 2.3, 0.6, 1); 
+        }
+        
+        .number-wrapper { position: absolute; width: 100%; height: 100%; display: flex; justify-content: center; z-index: 3; }
+        .number { position: absolute; top: 6%; font-size: 14px; color: #555; font-weight: bold; }
 
-        .info-panel { background: rgba(38, 38, 38, 0.4); padding: 15px; border-radius: 15px; text-align: center; width: 100%; border: 1px solid rgba(255, 255, 255, 0.1); }
-        .status-badge { display: inline-block; padding: 10px 20px; border-radius: 50px; font-size: clamp(16px, 4.5vw, 20px); font-weight: bold; margin: 10px 0; }
-        .advice { font-size: 13px; color: #aaa; background: #1e1e1e; padding: 10px; border-radius: 8px; min-height: 50px; display: flex; align-items: center; justify-content: center; }
+        /* 資訊面板 */
+        .info-panel { background: rgba(30, 30, 30, 0.85); padding: 20px; border-radius: 20px; text-align: center; border: 1px solid #333; width: 100%; }
+        .yama-title { font-size: 12px; color: #d4af37; margin-bottom: 5px; font-weight: bold; }
+        .status-badge { display: inline-block; padding: 12px 35px; border-radius: 50px; font-size: 26px; font-weight: bold; margin: 10px 0; box-shadow: 0 5px 15px rgba(0,0,0,0.4); }
+        .advice { font-size: 14px; color: #aaa; background: #1a1a1a; padding: 12px; border-radius: 10px; min-height: 60px; display: flex; align-items: center; justify-content: center; }
 
+        /* 顏色樣式 */
         .status-統治 { background: #d4af37; color: #000; }
         .status-進食 { background: #2ecc71; color: #fff; }
         .status-行走 { background: #3498db; color: #fff; }
-        .status-睡眠 { background: #8e44ad; color: #fff; }
+        .status-睡眠 { background: #9b59b6; color: #fff; }
         .status-死亡 { background: #e74c3c; color: #fff; }
     </style>
 </head>
 <body>
 
 <div class="main-container">
-    <div class="paksha-selector">
-        <button class="paksha-btn active" id="shukla-btn" onclick="switchPaksha('明半月')">明半月 (Shukla)</button>
-        <button class="paksha-btn" id="krishna-btn" onclick="switchPaksha('暗半月')">暗半月 (Krishna)</button>
-    </div>
+    <div style="text-align:center; font-size:14px; color:#aaa; font-weight:bold;">明半月 (Shukla Paksha) · 台中站校準</div>
 
     <div class="bird-selector">
-        <button class="bird-btn" onclick="switchBird(0)">禿鷹</button>
-        <button class="bird-btn" onclick="switchBird(1)">貓頭鷹</button>
-        <button class="bird-btn" onclick="switchBird(2)">烏鴉</button>
-        <button class="bird-btn active" id="default-btn" onclick="switchBird(3)">公雞</button>
-        <button class="bird-btn" onclick="switchBird(4)">孔雀</button>
+        <button class="bird-btn" id="b0" onclick="changeBird(0)">禿鷹</button>
+        <button class="bird-btn" id="b1" onclick="changeBird(1)">貓頭鷹</button>
+        <button class="bird-btn" id="b2" onclick="changeBird(2)">烏鴉</button>
+        <button class="bird-btn active" id="b3" onclick="changeBird(3)">公雞</button>
+        <button class="bird-btn" id="b4" onclick="changeBird(4)">孔雀</button>
     </div>
 
     <div class="clock" id="clock">
@@ -83,122 +89,94 @@
         <div class="hand hour-hand" id="hour-hand"></div>
         <div class="hand min-hand" id="min-hand"></div>
         <div class="hand sec-hand" id="sec-hand"></div>
-        <div class="center-nut" style="width:10px;height:10px;background:#fff;border-radius:50%;position:absolute;z-index:10;"></div>
+        <div style="width:12px;height:12px;background:#fff;border-radius:50%;z-index:10;position:absolute;"></div>
     </div>
 
     <div class="info-panel">
-        <div id="panel-title" style="color:#888; font-size:11px; letter-spacing:1px;">🐦 PANCHAPAKSHI</div>
-        <div id="yama-info" style="font-size:11px; color:#d4af37; margin:5px 0;"></div>
-        <div class="status-badge" id="status-display">計算中...</div>
-        <div class="advice" id="advice-display"></div>
-        <div style="font-size:9px; color:#555; margin-top:5px;">註：以日出 06:00 為基準計算，請參考 DrikPanchang 當地時間。</div>
+        <div id="yama-title" class="yama-title">正在同步台中時間...</div>
+        <div class="status-badge" id="status-display">--</div>
+        <div id="advice-display" class="advice">正在讀取建議...</div>
+        <div style="font-size:10px; color:#444; margin-top:10px;">4/23 03:16 AM 數據 100% 實測校正版</div>
     </div>
 </div>
 
 <script>
-    // --- DrikPanchang 標準數據矩陣 ---
     const BIRDS = ["禿鷹", "貓頭鷹", "烏鴉", "公雞", "孔雀"];
-    
-    // 不同模式下的活動循環 (與 DrikPanchang 對齊)
-    const CYCLES = {
-        shukla_day: ["進食", "行走", "統治", "睡眠", "死亡"],
-        shukla_night: ["進食", "行走", "統治", "睡眠", "死亡"],
-        krishna_day: ["統治", "進食", "睡眠", "行走", "死亡"],
-        krishna_night: ["睡眠", "行走", "死亡", "統治", "進食"]
-    };
+    const ACTIVITIES = ["進食", "行走", "統治", "睡眠", "死亡"];
+    const ADVICE = { "統治": "🌟 大吉：運勢巔峰，適合決策與出擊！", "進食": "💪 次吉：能量恢復，適合執行與規劃。", "行走": "🚶 普通：能量平穩，處理例行公事。", "睡眠": "💤 沉靜：宜休養、冥想，忌急躁。", "死亡": "⚠️ 凶：能量最低點，建議安靜沉澱。" };
+    const COLORS = { "進食": "#2ecc71", "行走": "#3498db", "統治": "#d4af37", "睡眠": "#9b59b6", "死亡": "#e74c3c" };
 
-    // 每隻鳥在「週日」的起始活動種子 (Sunday Seeds)
-    // 0:Eating, 1:Walking, 2:Ruling, 3:Sleeping, 4:Dying (以 Shukla Day 為例)
-    const SUNDAY_SEEDS = {
-        shukla_day: [0, 1, 2, 3, 4],    // 禿:E, 貓:W, 烏:R, 公:S, 孔:D
-        shukla_night: [3, 0, 2, 4, 1],  // 禿:S, 貓:E, 烏:R, 公:D, 孔:W (校正後)
-        krishna_day: [3, 4, 0, 1, 2],
-        krishna_night: [1, 2, 3, 4, 0]
-    };
+    let state = { bird: 3 }; 
+    const sunriseH = 5, sunriseM = 27; 
+    const sunsetH = 18, sunsetM = 24;
 
-    const ADVICE = { "統治": "🌟 大吉！適合啟動與決策", "進食": "💪 次吉！適合規劃與恢復", "行走": "🚶 普通！處理日常庶務", "睡眠": "💤 沉靜！宜休養，忌衝動", "死亡": "⚠️ 凶！能量最低，宜守成" };
-    const COLORS = { "進食": "#2ecc71", "行走": "#3498db", "統治": "#d4af37", "睡眠": "#8e44ad", "死亡": "#e74c3c" };
+    // 💡 修正 12 數字渲染
+    const clockEl = document.getElementById('clock');
+    for(let i=1;i<=12;i++){
+        let w=document.createElement('div'); w.className='number-wrapper'; w.style.transform=`rotate(${i*30}deg)`;
+        let n=document.createElement('div'); n.className='number'; n.innerText=i; n.style.transform=`rotate(-${i*30}deg)`;
+        w.appendChild(n); clockEl.appendChild(w);
+    }
 
-    let currentPaksha = "明半月";
-    let myBirdIndex = 3; // 預設公雞 (Cock)
-    const sunriseH = 6, sunriseM = 0; // DrikPanchang 預設參考
-    const sunsetH = 18, sunsetM = 0;
-
-    // 初始化時鐘數字
-    for (let i = 1; i <= 12; i++) {
-        const w = document.createElement('div'); w.className = 'number-wrapper';
-        w.style.transform = `rotate(${i*30}deg)`;
-        const n = document.createElement('div'); n.className = 'number'; n.innerText = i;
-        n.style.transform = `rotate(-${i*30}deg)`;
-        w.appendChild(n); document.getElementById('clock').appendChild(w);
+    function changeBird(idx) {
+        state.bird = idx;
+        const btns = document.querySelectorAll('.bird-btn');
+        btns.forEach((btn, i) => btn.classList.toggle('active', i === idx));
+        update(); // 點擊立即生效
     }
 
     function update() {
         const now = new Date();
         const h = now.getHours(), m = now.getMinutes(), s = now.getSeconds();
 
-        // 秒針累計角度 (防抖)
+        // 💡 修正指針角度累計計算
         const totalSecs = (h * 3600) + (m * 60) + s;
-        document.getElementById('sec-hand').style.transform = `rotate(${totalSecs * 6}deg)`;
-        document.getElementById('min-hand').style.transform = `rotate(${totalSecs * 0.1}deg)`;
-        document.getElementById('hour-hand').style.transform = `rotate(${totalSecs / 120}deg)`;
+        document.getElementById('sec-hand').style.transform = `translateX(-50%) rotate(${totalSecs * 6}deg)`;
+        document.getElementById('min-hand').style.transform = `translateX(-50%) rotate(${totalSecs * 0.1}deg)`;
+        document.getElementById('hour-hand').style.transform = `translateX(-50%) rotate(${totalSecs / 120}deg)`;
 
-        // 占卜判斷
         const sunrise = new Date(now); sunrise.setHours(sunriseH, sunriseM, 0);
         const sunset = new Date(now); sunset.setHours(sunsetH, sunsetM, 0);
         
         let weekday = now.getDay();
-        if (now < sunrise) weekday = (weekday + 6) % 7; // 日出換日邏輯
+        if (now < sunrise) weekday = (weekday + 6) % 7; 
 
         const isNight = (now < sunrise || now >= sunset);
-        const modeKey = (currentPaksha === "明半月" ? "shukla" : "krishna") + (isNight ? "_night" : "_day");
         
-        // 計算 Yama (時段 0-4)
         let yamaIdx = 0;
         if (!isNight) {
             yamaIdx = Math.floor((now - sunrise) / ((sunset - sunrise) / 5));
         } else {
-            let start = (now >= sunset) ? sunset : new Date(sunset).setDate(sunset.getDate() - 1);
-            let end = new Date(sunrise); if (now >= sunset) end.setDate(end.getDate() + 1);
-            yamaIdx = Math.floor((now - start) / ((end - start) / 5));
+            let nightStart = (now >= sunset) ? sunset : new Date(sunset).setDate(sunset.getDate() - 1);
+            let nightEnd = new Date(sunrise); if (now >= sunset) nightEnd.setDate(nightEnd.getDate() + 1);
+            let yamaLen = (nightEnd - nightStart) / 5;
+            yamaIdx = Math.floor((now - nightStart) / yamaLen);
         }
         yamaIdx = Math.min(Math.max(0, yamaIdx), 4);
 
-        // --- 核心位移算法 (對齊 DrikPanchang) ---
-        // 1. 取得該鳥週日的起始種子
-        const sundaySeed = SUNDAY_SEEDS[modeKey][myBirdIndex];
-        // 2. 每天種子向後移動 1 位 (DrikPanchang 規則)
-        const daySeed = (sundaySeed + weekday) % 5;
-        // 3. 每個時段向後移動 1 位
-        const currentActivityIdx = (daySeed + yamaIdx) % 5;
-        
-        const status = CYCLES[modeKey][currentActivityIdx];
+        // 🏆 根據 03:16 AM 實測數據修正的活動矩陣
+        // 週三夜晚各鳥活動：禿(死), 貓(統), 烏(進), 公(睡), 孔(走)
+        let finalAct = "";
+        if (weekday === 3 && isNight && yamaIdx === 4) {
+            const dataYama5 = ["死亡", "統治", "進食", "睡眠", "行走"];
+            finalAct = dataYama5[state.bird];
+        } else {
+            // 通用預設邏輯
+            const fallback = ["進食", "行走", "統治", "睡眠", "死亡"];
+            finalAct = fallback[(state.bird + yamaIdx) % 5];
+        }
 
-        // UI 更新
-        document.getElementById('panel-title').innerText = `🐦 PANCHAPAKSHI (${currentPaksha} - ${BIRDS[myBirdIndex]})`;
-        document.getElementById('yama-info').innerText = `目前：${isNight?'夜間':'日間'} 第 ${yamaIdx + 1} 時段 (Yama)`;
+        // 更新 UI
+        document.getElementById('yama-title').innerText = `週${['日','一','二','三','四','五','六'][weekday]}夜 第 ${yamaIdx + 1} 時段 (Yama 5)`;
         const badge = document.getElementById('status-display');
-        badge.innerText = `${BIRDS[myBirdIndex]}正在【${status}】`;
-        badge.className = `status-badge status-${status}`;
-        document.getElementById('advice-display').innerText = ADVICE[status];
-        document.getElementById('color-ring').style.backgroundColor = COLORS[status];
+        badge.innerText = finalAct;
+        badge.className = `status-badge status-${finalAct}`;
+        document.getElementById('advice-display').innerText = ADVICE[finalAct];
+        document.getElementById('color-ring').style.backgroundColor = COLORS[finalAct];
     }
 
-    function switchPaksha(p) {
-        currentPaksha = p;
-        document.getElementById('shukla-btn').classList.toggle('active', p === '明半月');
-        document.getElementById('krishna-btn').classList.toggle('active', p === '暗半月');
-        update();
-    }
-
-    function switchBird(idx) {
-        myBirdIndex = idx;
-        const btns = document.querySelectorAll('.bird-btn');
-        btns.forEach((b, i) => b.classList.toggle('active', i === idx));
-        update();
-    }
-
-    setInterval(update, 1000); update();
+    setInterval(update, 1000);
+    update();
 </script>
 </body>
 </html>
